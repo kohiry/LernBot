@@ -1,4 +1,0 @@
-
-setting = {
-    "token": "2"
-}
