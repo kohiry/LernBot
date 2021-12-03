@@ -26,7 +26,7 @@ keys_board = {
 
 client = Obj.client()
 bot = telebot.TeleBot(setting["token"]);
-
+ 
 HELP = """
 ***********************HELP****************************
 */start - создаём ваш аккаунт <3
