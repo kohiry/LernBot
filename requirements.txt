@@ -1,2 +1,3 @@
-sqlite3
-telebot
+sqlite3==3.31.1
+pyTelegramBotAPI==4.1.1
+
