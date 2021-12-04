@@ -2,6 +2,7 @@ import telebot
 import Obj
 from Info import setting
 from telebot import types
+import MathData
 #from keyboa import Keyboa # кнопки на клаве
 #fruits = [
 #  "banana", "coconut", "orange",
@@ -23,10 +24,16 @@ keys_board = {
 'tutor' : ['/help', '/start', '/play'],
 }
 
+# триггеры
+cb_play = False
+cb_play1 = False
+cb_play2 = False
+play_counter = -2
+
 
 client = Obj.client()
 bot = telebot.TeleBot(setting["token"]);
- 
+
 HELP = """
 ***********************HELP****************************
 */start - создаём ваш аккаунт <3
@@ -98,6 +105,22 @@ def cb_button10(message: types.Message):
     elif answer == "Been":
         bot.send_message(message.from_user.id, "Ошибка! Вы уже зарегестрированы. Посмотреть мои возможности /help", reply_markup=keyboards(keys_board['start']))
 
+@bot.callback_query_handler(func=lambda call: call.data == 'cb_pla1')
+def cb_plays1(message: types.Message):
+    global cb_play1
+    bot.delete_message(message.from_user.id, message.message.message_id)
+    cb_play1 = True
+    bot.send_message(message.from_user.id, "Нажми 'Начнём!' чтобы начать!", reply_markup=keyboards(['Начнём!']))
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'cb_pla2')
+def cb_plays2(message: types.Message):
+    global cb_play2
+    bot.delete_message(message.from_user.id, message.message.message_id)
+    cb_play2 = True
+    bot.send_message(message.from_user.id, "Нажми 'Начнём!' чтобы начать!", reply_markup=keyboards(['Начнём!']))
+
+
 @bot.callback_query_handler(func=lambda call: call.data == 'cb_info')
 def cb_button1(message: types.Message):
     print("work with info")
@@ -106,9 +129,11 @@ def cb_button1(message: types.Message):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'cb_play')
 def cb_button1(message: types.Message):
+    global cb_play
     print("work with play")
     bot.delete_message(message.from_user.id, message.message.message_id)
-    bot.send_message(message.from_user.id, "будущая функция игры", reply_markup=keyboards(keys_board['play']))
+    cb_play = True
+    bot.send_message(message.from_user.id, "Хорошо, нажми на кнопку!", reply_markup=keyboards(['Начнём!!']))
 
 @bot.callback_query_handler(func=lambda call: call.data == 'cb_help')
 def cb_button1(message: types.Message):
@@ -132,6 +157,7 @@ def keyboards(spisok):
 
 @bot.message_handler(content_types=["text"])
 def get_text_messages(message):
+    global cb_play1, cb_play2, play_counter, cb_play
 
     client.add_id(message.chat.id)
 
@@ -139,18 +165,78 @@ def get_text_messages(message):
     # класс с методами работы в базе данных
 
     #print(str(message.chat.id) + " " + message.from_user.username + ": " + message.text)
-    print(message.text)
-    if message.text in ["Привет", "привет", "сап", "s"]:
+    #print(message.text)
+    if cb_play1:
+        print(play_counter)
+        if message.text == "Ответ":
+            with open(f'пример{len(list(MathData.datas2.keys())) - play_counter+1}.png', 'rb') as img:
+                bot.send_photo(message.chat.id, img)
+        if play_counter - 1 > -2 and (message.text == str(MathData.datas2[list(MathData.datas2.keys())[len(list(MathData.datas2.keys())) - play_counter]])):
+            play_counter -= 1
+            with open(f'пример{len(list(MathData.datas2.keys())) - play_counter}.png', 'rb') as img:
+                bot.send_photo(message.chat.id, img)
+
+            if play_counter == 0:
+                print("sis")
+                play_counter -= 5
+                bot.send_message(message.from_user.id, "Чтобы завершить нажми кнопку!", reply_markup=keyboards(['End']))
+            else:
+                print(play_counter)
+                bot.send_message(message.from_user.id, list(MathData.datas2.keys())[len(list(MathData.datas2.keys())) - play_counter])
+
+
+        elif play_counter == -2:
+            play_counter = len(list(MathData.datas2.keys()))
+            #play_counter -= 1
+            bot.send_message(message.from_user.id, list(MathData.datas2.keys())[len(list(MathData.datas2.keys())) - play_counter])
+        elif play_counter -1 <= -1:
+            cb_play1 = False
+            play_counter = -2
+            print("sos")
+            bot.send_message(message.from_user.id, "Молодец! Отлично получилось, игра закончилась", reply_markup=keyboards(['/help']))
+        else:
+            bot.send_message(message.from_user.id, "Не понимаю. Введи ещё раз ответ.", reply_markup=keyboards(['Ответ']))
+        #cb_play1 = False
+    elif cb_play2:
+
+        if play_counter - 1 > -2 and (message.text == str(MathData.datas1[list(MathData.datas1.keys())[len(list(MathData.datas1.keys())) - play_counter]])):
+            play_counter -= 1
+            if play_counter == 0:
+                print("sis")
+                play_counter -= 5
+                bot.send_message(message.from_user.id, "Чтобы завершить нажи кнопку!", reply_markup=keyboards(['End']))
+            else:
+                print(play_counter)
+                bot.send_message(message.from_user.id, list(MathData.datas1.keys())[len(list(MathData.datas1.keys())) - play_counter])
+
+
+        elif play_counter == -2:
+            play_counter = len(list(MathData.datas1.keys()))
+            #play_counter -= 1
+            bot.send_message(message.from_user.id, list(MathData.datas1.keys())[len(list(MathData.datas1.keys())) - play_counter])
+        elif play_counter -1 <= -1:
+            cb_play2 = False
+            play_counter = -2
+            print("sos")
+            bot.send_message(message.from_user.id, "Молодец! Отлично получилось, игра закончилась", reply_markup=keyboards(['/help']))
+        else:
+            bot.send_message(message.from_user.id, "Не понимаю. Введи ещё раз ответ.")
+
+
+    elif message.text in ["Привет", "привет", "сап", "s"]:
         bot.send_message(message.from_user.id, "Привет, введи /help для информации о моих возможностях", reply_markup=keyboards(['/help']))
 
 
-    elif message.text == "/play":
-
-        bot.send_message(message.from_user.id, "будущая функция игры", reply_markup=keyboards(keys_board['play']))
+    elif message.text == "/play" or cb_play:
+        cb_play = False
         # 2 режима игры - со счетами в ирл и без них
+        markup = types.InlineKeyboardMarkup()
+        markup.row_width = 2
+        markup.add(types.InlineKeyboardButton("First!", callback_data="cb_pla1"),
+                   types.InlineKeyboardButton("Second!", callback_data="cb_pla2"))
+        bot.send_message(message.from_user.id, "Какой режим игры выберете?", reply_markup=markup)
 
     elif message.text == "/info":
-
         bot.send_message(message.from_user.id, information, reply_markup=keyboards(keys_board['info']))
     elif message.text == "/tutor":
         bot.send_message(message.from_user.id, "сейчас идёт загрузка туториала пожалуйсто дождитесь окончания ...")
